@@ -6,10 +6,10 @@ namespace ConsoleApp1
 {
     public enum Flags
     {
-        Same,       //相同
-        Insert,     //对于源文件来说有，目标文件里没有； 对目标文件来说就是插入
-        Delete,     //删除
-        Update,     //修改
+        Same,       // 相同
+        Insert,     // 插入
+        Delete,     // 删除
+        Update,     // 修改
         Gray,       // 代表另一个文件有的本文件没有
     }
 
@@ -28,7 +28,7 @@ namespace ConsoleApp1
 
             //var ret = compareTest.CompareLine(src, tar);
 
-            List<int> srcList = new List<int> { 0, 2, 3, 4, 7 };
+            List<int> srcList = new List<int> { 0, 2, 3, 4, 7, 1, 1, 1, 1 };
             List<int> tarList = new List<int> { 0, 1, 3, 5, 6, 7 };
 
             NLPCompare compare = new NLPCompare();

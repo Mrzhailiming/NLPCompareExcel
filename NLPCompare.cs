@@ -69,7 +69,6 @@ namespace NLP
 
     }
 
-
     /// <summary>
     /// 要对比的一个元素
     /// </summary>
@@ -126,6 +125,10 @@ namespace NLP
                     mTable[i, j] = Math.Min(deleteDis, Math.Min(insertDis, updateDis));
 
                     //是哪一种操作 删除:往下走 增加:往右走
+                    //0 1 2 3
+                    //1
+                    //2
+                    //3
                     //删除
                     PairResult newPairResult;
                     if (deleteDis < insertDis && deleteDis < updateDis)
