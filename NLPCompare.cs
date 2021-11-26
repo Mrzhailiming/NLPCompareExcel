@@ -40,14 +40,26 @@ namespace NLP
         public Result(Result result)
         {
             //深拷贝
-            mResultList = new List<Item>(result.mResultList);
+            mResultList = new List<RowItem>(result.mResultList);
         }
 
-        public List<Item> mResultList = new List<Item>();
+        public List<RowItem> mResultList = new List<RowItem>();
 
         public int Count { get => mResultList.Count; }
 
-        public void Add(Item item)
+        /// <summary>
+        /// 迭代器
+        /// </summary>
+        /// <returns></returns>
+        public System.Collections.IEnumerator GetEnumerator()
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                yield return mResultList[i];
+            }
+        }
+
+        public void Add(RowItem item)
         {
             mResultList.Add(item);
         }
@@ -55,7 +67,7 @@ namespace NLP
         {
             mResultList.Clear();
         }
-        public Item this[int index]
+        public RowItem this[int index]
         {
             get
             {
@@ -70,13 +82,38 @@ namespace NLP
     }
 
     /// <summary>
-    /// 要对比的一个元素
+    /// 要对比的一行元素
     /// </summary>
-    public class Item
+    public class RowItem
     {
         public Flags mFlags;
+
+        public object mValue;
+    }
+
+
+    /// <summary>
+    /// 要对比一行元素的其中一个
+    /// </summary>
+    public class ColItem
+    {
+        public Flags mFlags;
+
         public int mValue;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="T1">要对比的两组元素的类型</typeparam>
+    /// <param name="src">源数组</param>
+    /// <param name="tar">目标数组</param>
+    /// <returns></returns>
+    public delegate bool CompareFunc(List<int> srcList, List<int> tarList);
+
+    public delegate bool CompareFuncInt(int src, int tar);
+    public delegate bool CompareFuncString(String src, String tar);
+
 
     /// <summary>
     /// 根据最小编辑距离策略,输出两个文件的不同
@@ -96,15 +133,32 @@ namespace NLP
         /// 存放标记的策略, 源和目标
         /// </summary>
         PairResult[,] mFlagsTable = null;
-        void Reset()
+
+        int srcLen = -1;
+        int tarLen = -1;
+
+        /// <summary>
+        /// !!!!!!!!!对比完一次就手动重置!!!!!!!!!!
+        /// reset之前吧自己想要的信息导出来
+        /// </summary>
+        public void Reset()
         {
             mTable = null;
             mFlagsTable = null;
         }
-        public void Compare(List<int> srcList, List<int> tarList)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="srcList"></param>
+        /// <param name="tarList"></param>
+        /// <param name="compareFunc2"></param>
+        /// <param name="minSimilarity">相似度大于多少认为是相同的</param>
+        public void Compare(List<List<int>> srcList, List<List<int>> tarList,
+            CompareFuncInt compareFunc2, float minSimilarity = 1.0f)
         {
-            int srcLen = srcList.Count;
-            int tarLen = tarList.Count;
+            srcLen = srcList.Count;
+            tarLen = tarList.Count;
             mTable = new int[srcLen + 1, tarLen + 1];//最小编辑距离
 
             mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
@@ -121,23 +175,22 @@ namespace NLP
 
                     int deleteDis = mTable[i - 1, j] + 1;//删除+1
                     int insertDis = mTable[i, j - 1] + 1;//插入+1
-                    int updateDis = mTable[i - 1, j - 1] + (ItemCompare(srcList[srcValueIndex], tarList[tarValueIndex]) ? 0 : 1);//修改+1
+
+                    bool sameFlag = CompareRow(srcList[srcValueIndex], tarList[tarValueIndex], compareFunc2, minSimilarity);
+                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : 1);//修改+1
+
                     mTable[i, j] = Math.Min(deleteDis, Math.Min(insertDis, updateDis));
 
                     //是哪一种操作 删除:往下走 增加:往右走
-                    //0 1 2 3
-                    //1
-                    //2
-                    //3
                     //删除
                     PairResult newPairResult;
                     if (deleteDis < insertDis && deleteDis < updateDis)
                     {
                         newPairResult = new PairResult(mFlagsTable[i - 1, j]);
                         //源文件这个值标记为被删除
-                        newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = srcList[srcValueIndex] });
+                        newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Delete, mValue = srcList[srcValueIndex] });
                         //目标文件加空值
-                        newPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
+                        newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Gray });
 
                     }
                     //插入
@@ -145,30 +198,30 @@ namespace NLP
                     {
                         newPairResult = new PairResult(mFlagsTable[i, j - 1]);
                         //源文件加空值
-                        newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
+                        newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Gray });
                         //目标文件标记为插入
-                        newPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tarList[tarValueIndex] });
+                        newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Insert, mValue = tarList[tarValueIndex] });
                     }
                     //修改或者不变
                     else
                     {
                         newPairResult = new PairResult(mFlagsTable[i - 1, j - 1]);
                         //值相同
-                        if (ItemCompare(srcList[srcValueIndex], tarList[tarValueIndex]))
+                        if (sameFlag)
                         {
                             //源文件标记为same
-                            newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
+                            newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
                             //目标文件标记为same
-                            newPairResult.TarResult.Add(new Item() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
+                            newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
 
                         }
                         //值不同, 即修改
                         else
                         {
                             //源文件标记为Update
-                            newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Update, mValue = srcList[srcValueIndex] });
+                            newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Update, mValue = srcList[srcValueIndex] });
                             //目标文件标记为Update
-                            newPairResult.TarResult.Add(new Item() { mFlags = Flags.Update, mValue = tarList[tarValueIndex] });
+                            newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Update, mValue = tarList[tarValueIndex] });
 
                         }
                     }
@@ -184,7 +237,92 @@ namespace NLP
             PrintDifferent(srcLen, tarLen);
 
             //放最后
-            Reset();
+            //Reset();//手动调用吧
+        }
+
+        /// <summary>
+        /// 判断两行是否是同一行
+        /// </summary>
+        /// <param name="srcList"></param>
+        /// <param name="tarList"></param>
+        private bool CompareRow(List<int> srcList, List<int> tarList, CompareFuncInt compareFuncInt, float minSimilarity)
+        {
+            //全用临时的
+            int srcLen = srcList.Count;
+            int tarLen = tarList.Count;
+            int[,] mTable = new int[srcLen + 1, tarLen + 1];//最小编辑距离
+            PairResult[,] mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
+
+            InitTable(mTable, srcLen, tarLen);
+            InitFlagsTable(mFlagsTable, srcLen, tarLen);
+
+            for (int i = 1; i <= srcLen; ++i)
+            {
+                int srcValueIndex = i - 1;
+                for (int j = 1; j <= tarLen; ++j)
+                {
+                    int tarValueIndex = j - 1;
+
+                    int deleteDis = mTable[i - 1, j] + 1;//删除+1
+                    int insertDis = mTable[i, j - 1] + 1;//插入+1
+                    bool sameFlag = compareFuncInt(srcList[srcValueIndex], tarList[tarValueIndex]);
+                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : 1);//修改+1
+
+                    mTable[i, j] = Math.Min(deleteDis, Math.Min(insertDis, updateDis));
+
+                    //是哪一种操作 删除:往下走 增加:往右走
+                    //删除
+                    PairResult newPairResult;
+                    if (deleteDis < insertDis && deleteDis < updateDis)
+                    {
+                        newPairResult = new PairResult(mFlagsTable[i - 1, j]);
+                        //源文件这个值标记为被删除
+                        newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Delete, mValue = srcList[srcValueIndex] });
+                        //目标文件加空值
+                        newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Gray });
+
+                    }
+                    //插入
+                    else if (insertDis < deleteDis && insertDis < updateDis)
+                    {
+                        newPairResult = new PairResult(mFlagsTable[i, j - 1]);
+                        //源文件加空值
+                        newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Gray });
+                        //目标文件标记为插入
+                        newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Insert, mValue = tarList[tarValueIndex] });
+                    }
+                    //修改或者不变
+                    else
+                    {
+                        newPairResult = new PairResult(mFlagsTable[i - 1, j - 1]);
+                        //值相同
+                        if (sameFlag)
+                        {
+                            //源文件标记为same
+                            newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
+                            //目标文件标记为same
+                            newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
+
+                        }
+                        //值不同, 即修改
+                        else
+                        {
+                            //源文件标记为Update
+                            newPairResult.SrcResult.Add(new RowItem() { mFlags = Flags.Update, mValue = srcList[srcValueIndex] });
+                            //目标文件标记为Update
+                            newPairResult.TarResult.Add(new RowItem() { mFlags = Flags.Update, mValue = tarList[tarValueIndex] });
+
+                        }
+                    }
+
+                    mFlagsTable[i, j] = newPairResult;
+                }
+            }
+
+            Result tarResult = mFlagsTable[srcLen, tarLen].TarResult;
+
+            //返回这两行是否相同 相似度>=预定相似度
+            return Similarity(tarResult) >= minSimilarity;
         }
 
         /// <summary>
@@ -208,6 +346,24 @@ namespace NLP
 
         }
 
+
+        /// <summary>
+        /// 两组元素的相似度
+        /// </summary>
+        /// <returns></returns>
+        public float Similarity(Result tarResult)
+        {
+            int sameCount = 0;
+            foreach(RowItem item in tarResult)
+            {
+                if(item.mFlags == Flags.Same)
+                {
+                    ++sameCount;
+                }
+            }
+
+            return sameCount / tarResult.Count;
+        }
         /// <summary>
         /// 输出编辑距离table
         /// </summary>
@@ -223,14 +379,6 @@ namespace NLP
 
                 Console.WriteLine(line);
             }
-        }
-
-        /// <summary>
-        /// 两个元素对比, 相同返回true
-        /// </summary>
-        bool ItemCompare(int src, int tar)
-        {
-            return src == tar;
         }
 
         /// <summary>
@@ -252,7 +400,7 @@ namespace NLP
         }
 
         /// <summary>
-        /// 全部需要new对象
+        /// 全部需要new对象,其实也不用全部new吧...
         /// </summary>
         void InitFlagsTable(PairResult[,] flagsTable, int col, int row)
         {
