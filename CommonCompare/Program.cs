@@ -4,9 +4,6 @@ using Compare.Excel;
 
 namespace Compare
 {
-    
-
-
     class Program
     {
         static void Main(string[] args)
