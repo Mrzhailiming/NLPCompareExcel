@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using Compare.Excel;
 
-namespace ConsoleApp1
+namespace Compare
 {
-    public enum Flags
-    {
-        Same,       // 相同
-        Insert,     // 插入
-        Delete,     // 删除
-        Update,     // 修改
-        Gray,       // 代表另一个文件有的本文件没有
-    }
+    
 
 
     class Program
@@ -40,6 +34,7 @@ namespace ConsoleApp1
             {
                 
             };
+
             ExcelCompare compare = new ExcelCompare();
             compare.MinSimilarity = 1.0f;
 

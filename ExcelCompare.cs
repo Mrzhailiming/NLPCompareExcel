@@ -1,16 +1,22 @@
-﻿using NLP;
-using System;
+﻿using Base.DelegateDefine;//先用本项目里的common
+using NLP;
 using System.Collections.Generic;
-using System.Text;
 
-namespace ConsoleApp1
+namespace Compare.Excel
 {
-
-    
-
-    class ExcelCompare
+    /// <summary>
+    /// Excel对比工具
+    /// </summary>
+    public class ExcelCompare
     {
-        static CompareFuncInt mCompareFuncInt = new CompareFuncInt(CompareFuncInt);
+        /// <summary>
+        /// 元素类型是int
+        /// </summary>
+        //static CompareFuncInt mCompareFuncInt = new CompareFuncInt(CompareFuncInt);
+
+        /// <summary>
+        /// 元素类型是string
+        /// </summary>
         static CompareFuncString mCompareFuncString = new CompareFuncString(CompareFuncString);
 
         private float mMinSimilarity = 1.0f;

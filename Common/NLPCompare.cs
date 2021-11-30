@@ -1,4 +1,5 @@
-﻿using ConsoleApp1;
+﻿using Base.Data;
+using Base.DelegateDefine;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -6,142 +7,47 @@ using System.Text;
 namespace NLP
 {
     /// <summary>
-    /// 源和目标的标记
-    /// </summary>
-    public class PairResult
-    {
-        public PairResult()
-        {
-        }
-        public PairResult(PairResult pairResult)
-        {
-            //深拷贝
-            srcResult = new Result(pairResult.SrcResult);
-            tarResult = new Result(pairResult.TarResult);
-        }
-        Result srcResult = new Result();
-        /// <summary>
-        /// 源
-        /// </summary>
-        public Result SrcResult { get => srcResult; }
-
-        Result tarResult = new Result();
-        /// <summary>
-        /// 目标
-        /// </summary>
-        public Result TarResult { get => tarResult; }
-    }
-
-    public class Result
-    {
-        public Result(){}
-
-
-        public Result(Result result)
-        {
-            //深拷贝
-            mResultList = new List<Item>(result.mResultList);
-        }
-
-        public List<Item> mResultList = new List<Item>();
-
-        public int Count { get => mResultList.Count; }
-
-        /// <summary>
-        /// 迭代器
-        /// </summary>
-        /// <returns></returns>
-        public System.Collections.IEnumerator GetEnumerator()
-        {
-            for (int i = 0; i < Count; i++)
-            {
-                yield return mResultList[i];
-            }
-        }
-
-        public void Add(Item item)
-        {
-            mResultList.Add(item);
-        }
-        public void Clear()
-        {
-            mResultList.Clear();
-        }
-        public Item this[int index]
-        {
-            get
-            {
-                return mResultList[index];
-            }
-            set
-            {
-                mResultList[index] = value;
-            }
-        }
-
-    }
-
-    /// <summary>
-    /// 要对比的元素
-    /// 可以是一行,可以是一个格子
-    /// </summary>
-    public class Item
-    {
-        public Flags mFlags;
-
-        public object mValue;
-
-        /// <summary>
-        /// 如果这一行标记是update. 就给当前字段赋值
-        /// 表示每一行的标记
-        /// </summary>
-        public PairResult mRowUpdateFlags;
-    }
-
-
-    public delegate bool CompareFuncInt(int src, int tar);
-    public delegate bool CompareFuncString(String src, String tar);
-
-
-    /// <summary>
-    /// 根据最小编辑距离策略,输出两个文件的不同
-    /// 
-    /// delete和gray对应
-    /// insert和gray对应
-    /// same和same对应
-    /// update和update对应
+    /// 输出两个二维数组的不同(根据最小编辑距离的策略)
     /// </summary>
     public class NLPCompare
     {
         /// <summary>
-        /// 存放最小编辑距离
+        /// 存放二维数组最小编辑距离table
         /// </summary>
         int[,] mTable = null;
         /// <summary>
-        /// 存放标记的策略, 源和目标
+        /// 存放二维数组标记的策略table
         /// </summary>
         PairResult[,] mFlagsTable = null;
 
+        /// <summary>
+        /// 保存二维数组的行数
+        /// </summary>
         int srcLen = -1;
+        /// <summary>
+        /// 保存二维数组的列数
+        /// </summary>
         int tarLen = -1;
 
         /// <summary>
         /// !!!!!!!!!对比完一次就手动重置!!!!!!!!!!
-        /// reset之前吧自己想要的信息导出来
+        ///  todo : reset之前吧自己想要的信息导出来
         /// </summary>
         public void Reset()
         {
             mTable = null;
             mFlagsTable = null;
+            srcLen = -1;
+            tarLen = -1;
         }
 
         /// <summary>
-        /// 
+        /// 对比函数
         /// </summary>
-        /// <param name="srcList"></param>
-        /// <param name="tarList"></param>
-        /// <param name="compareFunc"></param>
-        /// <param name="minSimilarity">相似度大于多少认为是相同的</param>
+        /// <param name="srcList">源二维数组</param>
+        /// <param name="tarList">目标二维数组</param>
+        /// <param name="compareFunc">二维数组元素是否相同的比较函数</param>
+        /// <param name="minSimilarity">两个二维数组的每一行相似度大于多少才认为是相同的一行</param>
         public void Compare(List<List<string>> srcList, List<List<string>> tarList,
             CompareFuncString compareFunc, float minSimilarity = 1.0f)
         {
@@ -175,9 +81,9 @@ namespace NLP
                     if (deleteDis < insertDis && deleteDis < updateDis)
                     {
                         newPairResult = new PairResult(mFlagsTable[i - 1, j]);
-                        //源文件这个值标记为被删除
+                        //源二维数组这个值标记为被删除
                         newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = srcList[srcValueIndex] });
-                        //目标文件加空值
+                        //目标二维数组加空值
                         newPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
 
                     }
@@ -185,9 +91,9 @@ namespace NLP
                     else if (insertDis < deleteDis && insertDis < updateDis)
                     {
                         newPairResult = new PairResult(mFlagsTable[i, j - 1]);
-                        //源文件加空值
+                        //源二维数组加空值
                         newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
-                        //目标文件标记为插入
+                        //目标二维数组标记为插入
                         newPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tarList[tarValueIndex] });
                     }
                     //修改或者不变
@@ -197,19 +103,19 @@ namespace NLP
                         //值相同
                         if (sameFlag)
                         {
-                            //源文件标记为same
+                            //源二维数组标记为same
                             newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
-                            //目标文件标记为same
+                            //目标二维数组标记为same
                             newPairResult.TarResult.Add(new Item() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
 
                         }
                         //值不同, 即修改
                         else
                         {
-                            //源文件标记为Update
+                            //源二维数组标记为Update 并存储二维数组这一行的对比结果
                             newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Update, mValue = srcList[srcValueIndex],
                                                                         mRowUpdateFlags = updateFlagResult });
-                            //目标文件标记为Update
+                            //目标二维数组标记为Update 并存储二维数组这一行的对比结果
                             newPairResult.TarResult.Add(new Item() { mFlags = Flags.Update, mValue = tarList[tarValueIndex],
                                                                         mRowUpdateFlags = updateFlagResult });
 
@@ -225,9 +131,6 @@ namespace NLP
 
             //输出差异
             PrintDifferent(srcLen, tarLen);
-
-            //放最后
-            //Reset();//手动调用吧
         }
 
         /// <summary>
@@ -268,9 +171,9 @@ namespace NLP
                     if (deleteDis < insertDis && deleteDis < updateDis)
                     {
                         newPairResult = new PairResult(mFlagsTable[i - 1, j]);
-                        //源文件这个值标记为被删除
+                        //源二维数组这个值标记为被删除
                         newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = srcList[srcValueIndex] });
-                        //目标文件加空值
+                        //目标二维数组加空值
                         newPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
 
                     }
@@ -278,9 +181,9 @@ namespace NLP
                     else if (insertDis < deleteDis && insertDis < updateDis)
                     {
                         newPairResult = new PairResult(mFlagsTable[i, j - 1]);
-                        //源文件加空值
+                        //源二维数组加空值
                         newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
-                        //目标文件标记为插入
+                        //目标二维数组标记为插入
                         newPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tarList[tarValueIndex] });
                     }
                     //修改或者不变
@@ -290,18 +193,18 @@ namespace NLP
                         //值相同
                         if (sameFlag)
                         {
-                            //源文件标记为same
+                            //源二维数组标记为same
                             newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
-                            //目标文件标记为same
+                            //目标二维数组标记为same
                             newPairResult.TarResult.Add(new Item() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
 
                         }
                         //值不同, 即修改, todo:得标记哪些格子被修改了
                         else
                         {
-                            //源文件标记为Update
+                            //源二维数组标记为Update
                             newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Update, mValue = srcList[srcValueIndex] });
-                            //目标文件标记为Update
+                            //目标二维数组标记为Update
                             newPairResult.TarResult.Add(new Item() { mFlags = Flags.Update, mValue = tarList[tarValueIndex] });
 
                         }
@@ -319,7 +222,7 @@ namespace NLP
         }
 
         /// <summary>
-        /// 输出两文件差异
+        /// 输出两二维数组差异
         /// </summary>
         void PrintDifferent(int srcLen, int tarLen)
         {
@@ -445,9 +348,9 @@ namespace NLP
                 int srcValueIndex = colIndex - 1;
 
                 PairResult colPairResult = new PairResult(flagsTable[colIndex - 1, 0]);
-                //源文件这个值标记为被删除
+                //源二维数组这个值标记为被删除
                 colPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = src[srcValueIndex] });
-                //目标文件加空值
+                //目标二维数组加空值
                 colPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
 
                 flagsTable[colIndex, 0] = colPairResult;
@@ -459,9 +362,9 @@ namespace NLP
                 int tarValueIndex = rowIndex - 1;
 
                 PairResult rowPairResult = new PairResult(flagsTable[0, rowIndex - 1]);
-                //源文件加空值
+                //源二维数组加空值
                 rowPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
-                //目标文件标记为插入
+                //目标二维数组标记为插入
                 rowPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tar[tarValueIndex] });
 
                 flagsTable[0, rowIndex] = rowPairResult;
@@ -499,9 +402,9 @@ namespace NLP
             {
                 PairResult colPairResult = flagsTable[colIndex, 0];
                 int srcValueIndex = colIndex - 1;
-                //源文件这个值标记为被删除
+                //源二维数组这个值标记为被删除
                 colPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = src[srcValueIndex] });
-                //目标文件加空值
+                //目标二维数组加空值
                 colPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
             }
 
@@ -510,9 +413,9 @@ namespace NLP
             {
                 PairResult rowPairResult = flagsTable[0, rowIndex];
                 int tarValueIndex = rowIndex - 1;
-                //源文件加空值
+                //源二维数组加空值
                 rowPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
-                //目标文件标记为插入
+                //目标二维数组标记为插入
                 rowPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tar[tarValueIndex] });
             }
         }
