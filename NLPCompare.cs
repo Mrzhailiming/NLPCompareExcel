@@ -152,7 +152,7 @@ namespace NLP
             mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
 
             InitDistanceTable(mTable, srcLen, tarLen);
-            InitExcelFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
+            InitTwoDimensionFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
 
             for (int i = 1; i <= srcLen; ++i)
             {
@@ -246,7 +246,7 @@ namespace NLP
             PairResult[,] mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
 
             InitDistanceTable(mTable, srcLen, tarLen);
-            InitLineFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
+            InitOneDimensionFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
 
             for (int i = 1; i <= srcLen; ++i)
             {
@@ -420,10 +420,9 @@ namespace NLP
         }
 
         /// <summary>
-        /// 全部需要new对象,其实也不用全部new吧...
-        /// 初始状态有问题,改
+        /// 初始化二维flagstable
         /// </summary>
-        void InitExcelFlagsTable(List<List<string>> src, List<List<string>> tar, PairResult[,] flagsTable, int col, int row)
+        void InitTwoDimensionFlagsTable(List<List<string>> src, List<List<string>> tar, PairResult[,] flagsTable, int col, int row)
         {
             //注:第一列和第一行需要给一个初始状态
 
@@ -469,7 +468,15 @@ namespace NLP
             }
         }
 
-        void InitLineFlagsTable(List<string> src, List<string> tar, PairResult[,] flagsTable, int col, int row)
+        /// <summary>
+        /// 初始化一维FlagsTable
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="tar"></param>
+        /// <param name="flagsTable"></param>
+        /// <param name="col"></param>
+        /// <param name="row"></param>
+        void InitOneDimensionFlagsTable(List<string> src, List<string> tar, PairResult[,] flagsTable, int col, int row)
         {
             //注:第一列和第一行需要给一个初始状态
 
