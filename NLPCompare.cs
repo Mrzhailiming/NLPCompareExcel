@@ -151,7 +151,7 @@ namespace NLP
 
             mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
 
-            InitTable(mTable, srcLen, tarLen);
+            InitDistanceTable(mTable, srcLen, tarLen);
             InitExcelFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
 
             for (int i = 1; i <= srcLen; ++i)
@@ -245,7 +245,7 @@ namespace NLP
             int[,] mTable = new int[srcLen + 1, tarLen + 1];//最小编辑距离
             PairResult[,] mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
 
-            InitTable(mTable, srcLen, tarLen);
+            InitDistanceTable(mTable, srcLen, tarLen);
             InitLineFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
 
             for (int i = 1; i <= srcLen; ++i)
@@ -404,7 +404,7 @@ namespace NLP
         /// <summary>
         /// 只把第一行和第一列设置
         /// </summary>
-        void InitTable(int[,] table, int col, int row)
+        void InitDistanceTable(int[,] table, int col, int row)
         {
             //第一列
             for (int i = 0; i <= col; ++i)
@@ -438,27 +438,34 @@ namespace NLP
                 }
             }
 
-            //2.把第一行和第一列的状态初始化了 [0,0]位置不用初始化
+            //2.把第一行和第一列的状态初始化了
+            //[0,0]位置特殊, 不需要添加item
             //第一列, 走删除的逻辑 src = "abc" -> tar = ""
             for (int colIndex = 1; colIndex <= col; ++colIndex)
             {
-                PairResult colPairResult = flagsTable[colIndex, 0];
                 int srcValueIndex = colIndex - 1;
+
+                PairResult colPairResult = new PairResult(flagsTable[colIndex - 1, 0]);
                 //源文件这个值标记为被删除
                 colPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = src[srcValueIndex] });
                 //目标文件加空值
                 colPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
+
+                flagsTable[colIndex, 0] = colPairResult;
             }
 
             //第一行, 走插入的逻辑 src = ""  -> tar = "abc"
             for (int rowIndex = 1; rowIndex <= row; ++rowIndex)
             {
-                PairResult rowPairResult = flagsTable[0, rowIndex];
                 int tarValueIndex = rowIndex - 1;
+
+                PairResult rowPairResult = new PairResult(flagsTable[0, rowIndex - 1]);
                 //源文件加空值
                 rowPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
                 //目标文件标记为插入
                 rowPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tar[tarValueIndex] });
+
+                flagsTable[0, rowIndex] = rowPairResult;
             }
         }
 
@@ -478,6 +485,8 @@ namespace NLP
             }
 
             //2.把第一行和第一列的状态初始化了
+            //[0,0]位置特殊, 不需要添加item
+
             //第一列, 走删除的逻辑 src = "abc" -> tar = ""
             for (int colIndex = 1; colIndex <= col; ++colIndex)
             {

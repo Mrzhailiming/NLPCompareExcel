@@ -33,11 +33,12 @@ namespace ConsoleApp1
 
             List<List<string>> src = new List<List<string>>
             {
+                new List<string> { "0", "1", "2" },
+                new List<string> { "0", "1", "2" },
             };
             List<List<string>> tar = new List<List<string>>
             {
-                new List<string> { "0", "1", "2" },
-                new List<string> { "0", "1", "2" },
+                
             };
             ExcelCompare compare = new ExcelCompare();
             compare.MinSimilarity = 1.0f;
