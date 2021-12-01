@@ -1,4 +1,5 @@
-﻿using Base.DelegateDefine;//先用本项目里的common
+﻿using Base.Data;
+using Base.DelegateDefine;//先用本项目里的common
 using NLP;
 using System.Collections.Generic;
 
@@ -19,23 +20,13 @@ namespace Compare.Excel
         /// </summary>
         static CompareFuncString mCompareFuncString = new CompareFuncString(CompareFuncString);
 
-        private float mMinSimilarity = 1.0f;
-        /// <summary>
-        /// 相似度大于等于多少是认为相同的
-        /// </summary>
-        public float MinSimilarity
-        {
-            get { return mMinSimilarity; }
-            set { mMinSimilarity = value; }
-        }
-
-
-        public void Run(List<List<string>> src, List<List<string>> tar)
+        public void Run(ExcelCompareParams excelCompareParams)
         {
             NLPCompare tmpNLPCompare = new NLPCompare();
-            tmpNLPCompare.Compare(src, tar, mCompareFuncString, MinSimilarity);
+            tmpNLPCompare.Compare(excelCompareParams.SrcData, excelCompareParams.TarData, excelCompareParams.MinSimilarity, 
+                mCompareFuncString, out excelCompareParams.ResultData);
 
-
+            //如果重复使用这个对象的Compare(),就得用完之后调用Reset()
             tmpNLPCompare.Reset();
         }
 

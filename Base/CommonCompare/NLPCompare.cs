@@ -19,6 +19,14 @@ namespace NLP
         /// 存放二维数组标记的策略table
         /// </summary>
         PairResult[,] mFlagsTable = null;
+        /// <summary>
+        /// 存放两个二维数组的对比结果, 
+        /// 例目标数组[i, j]元素被修改 那么本二维数组[i,j]的元素即为"U:源:目标"
+        /// 例目标数组[i, j]元素被删除 那么本二维数组[i,j]的元素即为"D:源:-.-"
+        /// 例目标数组[i, j]元素是增加 那么本二维数组[i,j]的元素即为"I:^.^:目标"
+        /// 定义在 OperationDefaultString 类中
+        /// </summary>
+        List<List<string>> mCompareResult = new List<List<string>>();
 
         /// <summary>
         /// 保存二维数组的行数
@@ -37,6 +45,7 @@ namespace NLP
         {
             mTable = null;
             mFlagsTable = null;
+            mCompareResult = new List<List<string>>();
             srcLen = -1;
             tarLen = -1;
         }
@@ -49,13 +58,13 @@ namespace NLP
         /// <param name="compareFunc">二维数组元素是否相同的比较函数</param>
         /// <param name="minSimilarity">两个二维数组的每一行相似度大于多少才认为是相同的一行</param>
         public void Compare(List<List<string>> srcList, List<List<string>> tarList,
-            CompareFuncString compareFunc, float minSimilarity = 1.0f)
+            float minSimilarity, CompareFuncString compareFunc, out List<List<string>> compareResult)
         {
             srcLen = srcList.Count;
             tarLen = tarList.Count;
-            mTable = new int[srcLen + 1, tarLen + 1];//最小编辑距离
+            mTable = new int[srcLen + 1, tarLen + 1];//[i,j]处最小编辑距离
 
-            mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
+            mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//[i,j]处最小编辑距离下的最优标记策略
 
             InitDistanceTable(mTable, srcLen, tarLen);
             InitTwoDimensionFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
@@ -67,11 +76,11 @@ namespace NLP
                 {
                     int tarValueIndex = j - 1;
 
-                    int deleteDis = mTable[i - 1, j] + 1;//删除+1
-                    int insertDis = mTable[i, j - 1] + 1;//插入+1
-                    PairResult updateFlagResult;
+                    int deleteDis = mTable[i - 1, j] + OperationWeight.DELETE;//删除
+                    int insertDis = mTable[i, j - 1] + OperationWeight.INSERT;//插入
+                    PairResult updateFlagResult;//只要两组元素不完全相同,就赋值
                     bool sameFlag = CompareRow(srcList[srcValueIndex], tarList[tarValueIndex], compareFunc, out updateFlagResult, minSimilarity);
-                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : 1);//修改+1
+                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : OperationWeight.UPDATE);//修改
 
                     mTable[i, j] = Math.Min(deleteDis, Math.Min(insertDis, updateDis));
 
@@ -100,24 +109,43 @@ namespace NLP
                     else
                     {
                         newPairResult = new PairResult(mFlagsTable[i - 1, j - 1]);
-                        //值相同
+                        //两组元素相同, 即相似度>=预定相似度
                         if (sameFlag)
                         {
                             //源二维数组标记为same
-                            newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Same, mValue = srcList[srcValueIndex] });
+                            newPairResult.SrcResult.Add(new Item()
+                            {
+                                mFlags = Flags.Same,
+                                mValue = srcList[srcValueIndex],
+                                mRowUpdateFlags = updateFlagResult // 在两组元素完全相同时为空
+                            });
+
                             //目标二维数组标记为same
-                            newPairResult.TarResult.Add(new Item() { mFlags = Flags.Same, mValue = tarList[tarValueIndex] });
+                            newPairResult.TarResult.Add(new Item()
+                            {
+                                mFlags = Flags.Same,
+                                mValue = tarList[tarValueIndex],
+                                mRowUpdateFlags = updateFlagResult // 在两组元素完全相同时为空
+                            });
 
                         }
-                        //值不同, 即修改
+                        //两组元素不同, 即相似度<预定相似度
                         else
                         {
                             //源二维数组标记为Update 并存储二维数组这一行的对比结果
-                            newPairResult.SrcResult.Add(new Item() { mFlags = Flags.Update, mValue = srcList[srcValueIndex],
-                                                                        mRowUpdateFlags = updateFlagResult });
+                            newPairResult.SrcResult.Add(new Item()
+                            {
+                                mFlags = Flags.Update,
+                                mValue = srcList[srcValueIndex],
+                                mRowUpdateFlags = updateFlagResult
+                            });
                             //目标二维数组标记为Update 并存储二维数组这一行的对比结果
-                            newPairResult.TarResult.Add(new Item() { mFlags = Flags.Update, mValue = tarList[tarValueIndex],
-                                                                        mRowUpdateFlags = updateFlagResult });
+                            newPairResult.TarResult.Add(new Item()
+                            {
+                                mFlags = Flags.Update,
+                                mValue = tarList[tarValueIndex],
+                                mRowUpdateFlags = updateFlagResult
+                            });
 
                         }
                     }
@@ -131,6 +159,9 @@ namespace NLP
 
             //输出差异
             PrintDifferent(srcLen, tarLen);
+
+            //给对比结果赋值
+            compareResult = mCompareResult;
         }
 
         /// <summary>
@@ -145,8 +176,8 @@ namespace NLP
             //全用临时的
             int srcLen = srcList.Count;
             int tarLen = tarList.Count;
-            int[,] mTable = new int[srcLen + 1, tarLen + 1];//最小编辑距离
-            PairResult[,] mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//标记策略
+            int[,] mTable = new int[srcLen + 1, tarLen + 1];//[i,j]最小编辑距离
+            PairResult[,] mFlagsTable = new PairResult[srcLen + 1, tarLen + 1];//[i,j]处最小编辑距离下的最优标记策略
 
             InitDistanceTable(mTable, srcLen, tarLen);
             InitOneDimensionFlagsTable(srcList, tarList, mFlagsTable, srcLen, tarLen);
@@ -158,10 +189,10 @@ namespace NLP
                 {
                     int tarValueIndex = j - 1;
 
-                    int deleteDis = mTable[i - 1, j] + 1;//删除+1
-                    int insertDis = mTable[i, j - 1] + 1;//插入+1
+                    int deleteDis = mTable[i - 1, j] + OperationWeight.DELETE;//删除
+                    int insertDis = mTable[i, j - 1] + OperationWeight.INSERT;//插入
                     bool sameFlag = compareFuncString(srcList[srcValueIndex], tarList[tarValueIndex]);
-                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : 1);//修改+1
+                    int updateDis = mTable[i - 1, j - 1] + (sameFlag ? 0 : OperationWeight.UPDATE);//修改
 
                     mTable[i, j] = Math.Min(deleteDis, Math.Min(insertDis, updateDis));
 
@@ -215,10 +246,17 @@ namespace NLP
             }
 
             Result tarResult = mFlagsTable[srcLen, tarLen].TarResult;
-            updateFlagsResult = mFlagsTable[srcLen, tarLen];
+            float curSimilarity = Similarity(tarResult);
+            bool isSame = curSimilarity >= minSimilarity;
+
+            //两组元素相似且不完全相同时才给updateFlagsResult赋值
+            if (isSame && 1.0 > curSimilarity)
+            {
+                updateFlagsResult = mFlagsTable[srcLen, tarLen];
+            }
 
             //返回这两行是否相同 相似度>=预定相似度
-            return Similarity(tarResult) >= minSimilarity;
+            return isSame;
         }
 
         /// <summary>
@@ -228,65 +266,179 @@ namespace NLP
         {
             Result srcResult = mFlagsTable[srcLen, tarLen].SrcResult;
             Result tarResult = mFlagsTable[srcLen, tarLen].TarResult;
-         
+
             Console.WriteLine("--srcFile result begin--");
-            PrintOneFile(srcResult);
+            PrintOneFile(srcResult, true);
             Console.WriteLine("--srcFile result end--\r\n");
 
             Console.WriteLine("--tarFile result begin--");
-            PrintOneFile(tarResult);
+            PrintOneFile(tarResult, false);
             Console.WriteLine("--tarFile result end--");
 
         }
 
-        void PrintOneFile(Result result)
+        /// <summary>
+        /// 源二维数组和目标二维数组要分开输出
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="isSrcFile">是不是输出源文件</param>
+        void PrintOneFile(Result result, bool isSrcFile)
         {
             for (int srcIndex = 0; srcIndex < result.Count; ++srcIndex)
             {
-                string srcStr = $"line:{srcIndex} value:{result[srcIndex].mValue} flag:{result[srcIndex].mFlags}";
-                Console.WriteLine(srcStr);
+                string messageStr = $"line:{srcIndex} value:{result[srcIndex].mValue} flag:{result[srcIndex].mFlags}";
+                Console.WriteLine(messageStr);
 
-                //这一行如果是更改,输出哪些更改了
-                if (result[srcIndex].mFlags == Flags.Update)
+                //mRowUpdateFlags不为空, 两组元素就有差异
+                PairResult tmpLineResult = result[srcIndex].mRowUpdateFlags;
+                if (null != tmpLineResult)//这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
                 {
-                    PairResult tmpLineResult = result[srcIndex].mRowUpdateFlags;
-
-                    PrintLineDiff(tmpLineResult, srcIndex);
+                    PrintLineDiff(tmpLineResult, srcIndex, isSrcFile);
                 }
+
+                Write(result[srcIndex], srcIndex, isSrcFile);
             }
         }
-        void PrintLineDiff(PairResult result, int lineIndex)
-        {
-            Console.WriteLine($"----line{lineIndex}-where-update begin----");
 
-            Result srcRst = result.SrcResult;
-            int i = -1;
-            foreach (Item item in srcRst)
+        /// <summary>
+        /// 写入mResult
+        /// </summary>
+        public void Write(Item lineItem, int lineIndex, bool isSrcFile)
+        {
+            #region 写入mResult
+
+            List<string> line;
+
+            // 写源文件
+            if (mCompareResult.Count <= lineIndex)
             {
-                string updateStr = $"line:{++i} value:{item.mValue} flag:{item.mFlags}";
+                line = new List<string>();
+                mCompareResult.Add(line);
+
+                
+                {
+                    if (lineItem.mFlags == Flags.Same)
+                    {
+                        foreach (string value in (List<string>)lineItem.mValue)
+                        {
+                            line.Add(value);
+                        }
+                    }
+                    else if (lineItem.mFlags == Flags.Update) // 代表修改
+                    {
+                        foreach (string value in (List<string>)lineItem.mValue)
+                        {
+                            line.Add($"U:{value}");
+                        }
+                    }
+                    else if (lineItem.mFlags == Flags.Insert)
+                    {
+                        //源数组不会有这个标记
+                    }
+                    else if (lineItem.mFlags == Flags.Gray)//代表插入 src = "" tar = "abc"
+                    {
+                        line.Add($"占位");
+                        //line.Add($"I:{OperationString.INSERT}");//源二维数组是没有值,也不知道这一行有多少元素,就不在这赋值了
+                    }
+                    else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
+                    {
+                        foreach (string value in (List<string>)lineItem.mValue)
+                        {
+                            line.Add($"D:{value}");
+                        }
+                    }
+                }
+            }
+            // 写目标文件
+            else
+            {
+                line = mCompareResult[lineIndex];
+                int itemIndex = -1;
+
+                
+                if (lineItem.mFlags == Flags.Same)//same 就只写源二维数组的值就行了
+                {
+                    //foreach (string value in (List<string>)lineItem.mValue)
+                    //{
+                    //    line[++itemIndex] = $"{line[itemIndex]}:{value}";
+                    //}
+                }
+                else if (lineItem.mFlags == Flags.Update) // 代表修改
+                {
+                    foreach (string value in (List<string>)lineItem.mValue)
+                    {
+                        line[++itemIndex] = $"{line[itemIndex]}{OperationString.SEPARATOR}{value}";
+                    }
+                }
+                else if (lineItem.mFlags == Flags.Insert)//插入 
+                {
+                    line.Clear();
+                    foreach (string value in (List<string>)lineItem.mValue)
+                    {
+                        line.Add($"I:{OperationString.INSERT}{OperationString.SEPARATOR}{value}");
+                    }
+                }
+                else if (lineItem.mFlags == Flags.Gray)//代表目标文件的这个元素被删除 src = "abc" tar = ""
+                {
+                    //lineItem是没有值的, 所以只能遍历源文件里的值
+                    //foreach (string value in line)//不能范围for, 因为要修改自己的值
+                    for(int index = 0; index < line.Count; ++index)
+                    {
+                        line[index] = $"{line[index]}{OperationString.SEPARATOR}{OperationString.DELETE}";
+                    }
+                }
+                else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
+                {
+                    //源数组不会有这个标记
+                }
+            }
+
+            #endregion 写入mResult
+        }
+
+        /// <summary>
+        /// 有差异的才会输出
+        /// </summary>
+        /// <param name="result"></param>
+        /// <param name="lineIndex"></param>
+        void PrintLineDiff(PairResult pairResult, int lineIndex, bool isSrcFile)
+        {
+            Result result = isSrcFile ? pairResult.SrcResult : pairResult.TarResult;
+
+            #region 控制台输出
+
+            Console.WriteLine($"----line{lineIndex}-where-update begin----");
+            int i = -1;
+            foreach (Item item in result)
+            {
+                string updateStr = $"row:{++i} value:{item.mValue} flag:{item.mFlags}";
                 Console.WriteLine(updateStr);
             }
             Console.WriteLine($"----line{lineIndex}-where-update end----");
+
+            #endregion 控制台输出
         }
 
 
         /// <summary>
         /// 两组元素的相似度
+        /// 如果不是完全相似,还需要输出两组元素的不同
         /// </summary>
         /// <returns></returns>
         public float Similarity(Result tarResult)
         {
             int sameCount = 0;
-            foreach(Item item in tarResult)
+            foreach (Item item in tarResult)
             {
-                if(item.mFlags == Flags.Same)
+                if (item.mFlags == Flags.Same)
                 {
                     ++sameCount;
                 }
             }
 
-            return sameCount / tarResult.Count;
+            return sameCount / (float)tarResult.Count;
         }
+
         /// <summary>
         /// 输出编辑距离table
         /// </summary>

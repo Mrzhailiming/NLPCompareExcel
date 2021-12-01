@@ -11,7 +11,7 @@ namespace Base.Data
     public class Result
     {
         /// <summary>
-        /// 保存一行(列)的对比结果
+        /// 保存一行的对比结果
         /// </summary>
         public List<Item> mResultList = new List<Item>();
 

@@ -12,7 +12,7 @@ namespace Base.Data
     {
         public Flags mFlags;
 
-        public object mValue;
+        public object mValue;//可以是list<string> 也可以 string
 
         /// <summary>
         /// 如果这一行标记是update. 就给当前字段赋值
