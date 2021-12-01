@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace NLP
+namespace Common
 {
     /// <summary>
     /// 输出两个二维数组的不同(根据最小编辑距离的策略)

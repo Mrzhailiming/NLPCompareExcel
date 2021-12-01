@@ -1,14 +1,12 @@
 ﻿using Base.Data;
-using Base.DelegateDefine;//先用本项目里的common
-using NLP;
-using System.Collections.Generic;
+using Base.DelegateDefine;
 
-namespace Compare.Excel
+namespace Common
 {
     /// <summary>
-    /// Excel对比工具
+    /// 二维List对比工具
     /// </summary>
-    public class ExcelCompare
+    public class CommonCompare
     {
         /// <summary>
         /// 元素类型是int

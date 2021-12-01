@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using Base.Data;
-using Compare.Excel;
 
-namespace CommonCompare
+namespace Common
 {
     class Program
     {
@@ -23,7 +21,7 @@ namespace CommonCompare
             ExcelHelper.ReadExcel(srcFileFullPath, out excelCompareParams.SrcData);
             ExcelHelper.ReadExcel(tarFileFullPath, out excelCompareParams.TarData);
 
-            ExcelCompare excelCompare = new ExcelCompare();
+            CommonCompare excelCompare = new CommonCompare();
             excelCompare.Run(excelCompareParams);
 
 
