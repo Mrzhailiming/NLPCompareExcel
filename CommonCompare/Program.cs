@@ -18,14 +18,14 @@ namespace Common
             ExcelCompareParams excelCompareParams = new ExcelCompareParams();
             excelCompareParams.MinSimilarity = 1.0f;
 
-            ExcelHelper.ReadExcel(srcFileFullPath, out excelCompareParams.SrcData);
-            ExcelHelper.ReadExcel(tarFileFullPath, out excelCompareParams.TarData);
+            ExcelCompareHelper.ReadExcel(srcFileFullPath, out excelCompareParams.SrcData);
+            ExcelCompareHelper.ReadExcel(tarFileFullPath, out excelCompareParams.TarData);
 
             CommonCompare excelCompare = new CommonCompare();
             excelCompare.Run(excelCompareParams);
 
 
-            ExcelHelper.WriteCSV($"{exePath}\\src", "result", excelCompareParams.ResultData);
+            ExcelCompareHelper.WriteCSV($"{exePath}\\src", "result", excelCompareParams.ResultData);
         }
 
 
