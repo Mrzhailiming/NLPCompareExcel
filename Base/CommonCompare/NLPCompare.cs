@@ -292,23 +292,25 @@ namespace Common
         /// <param name="isSrcFile">是不是输出源文件</param>
         void PrintOneFile(Result result, bool isSrcFile)
         {
+            // 遍历每一行, 并输出
             for (int srcIndex = 0; srcIndex < result.Count; ++srcIndex)
             {
+                //控制台输出
                 string messageStr = $"line:{srcIndex} value:{result[srcIndex].mValue} flag:{result[srcIndex].mFlags}";
                 Console.WriteLine(messageStr);
 
-                //mRowUpdateFlags不为空, 两组元素就有差异
+                //mRowUpdateFlags不为空, 两组元素就有差异 就会为mRowUpdateFlags赋值
                 PairResult tmpLineResult = result[srcIndex].mRowUpdateFlags;
 
-                // 源
+                // 源二维数组
                 if (isSrcFile)
                 {
-                    //这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
+                    //这个判断, 只有不完全相同的两行才会输出 :标记为update 或者 same(不完全相同的情况)
                     if (null != tmpLineResult)
                     {
                         PrintLineDiff(tmpLineResult, srcIndex, isSrcFile);
 
-                        ////源二维数组的时候往mResult写全了就 . 因为tmpLineResult包含源和目标的值
+                        // 源二维数组的时候往mResult写全了就 . 因为tmpLineResult包含源和目标的值
                         WriteLineUpdate(tmpLineResult, srcIndex, isSrcFile);
                     }
                     //负责写Insert和Delete 还有same(完全相同) gray
@@ -317,7 +319,7 @@ namespace Common
                         WriteSrcLine(result[srcIndex], srcIndex, isSrcFile);
                     }
                 }
-                // 目标
+                // 目标二维数组
                 else
                 {
                     //这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
@@ -337,6 +339,7 @@ namespace Common
         /// <summary>
         /// 一次将源和目标数组写入mResult
         /// 输出 update 或者 same(不完全相同的情况)
+        /// 行标记为 Insert和Delete 还有same(完全相同) gray 不会调用这个函数
         /// </summary>
         public void WriteLineUpdate(PairResult pairLineResult, int lineIndex, bool isSrcFile)
         {
@@ -405,6 +408,7 @@ namespace Common
         /// <summary>
         /// 将源二维数组的状态写入mResult
         /// 写Insert和Delete 还有same(完全相同) gray
+        /// 行标记为update 或者 same(不完全相同的情况) 不会走这个函数
         /// </summary>
         public void WriteSrcLine(Item lineItem, int lineIndex, bool isSrcFile)
         {
@@ -456,7 +460,7 @@ namespace Common
         /// 将目标二维数组的状态写入mResult
         /// 写Insert和Delete 还有same(完全相同) gray
         /// </summary>
-        public void WriteTarLine(Item lineItem, int lineIndex, bool isSrcFile)
+        private void WriteTarLine(Item lineItem, int lineIndex, bool isSrcFile)
         {
             #region 写入mCompareResult
 
@@ -507,7 +511,7 @@ namespace Common
         /// </summary>
         /// <param name="result"></param>
         /// <param name="lineIndex"></param>
-        void PrintLineDiff(PairResult pairResult, int lineIndex, bool isSrcFile)
+        private void PrintLineDiff(PairResult pairResult, int lineIndex, bool isSrcFile)
         {
             Result result = isSrcFile ? pairResult.SrcResult : pairResult.TarResult;
 
@@ -528,10 +532,9 @@ namespace Common
 
         /// <summary>
         /// 两组元素的相似度
-        /// 如果不是完全相似,还需要输出两组元素的不同
         /// </summary>
         /// <returns></returns>
-        public float Similarity(Result tarResult)
+        private float Similarity(Result tarResult)
         {
             int sameCount = 0;
             foreach (Item item in tarResult)
@@ -548,7 +551,7 @@ namespace Common
         /// <summary>
         /// 输出编辑距离table
         /// </summary>
-        void PrintDis(int srcLen, int tarLen, int[,] mTable)
+        private void PrintDis(int srcLen, int tarLen, int[,] mTable)
         {
             for (int i = 0; i <= srcLen; ++i)
             {
@@ -565,7 +568,7 @@ namespace Common
         /// <summary>
         /// 只把第一行和第一列设置
         /// </summary>
-        void InitDistanceTable(int[,] table, int col, int row)
+        private void InitDistanceTable(int[,] table, int col, int row)
         {
             //第一列
             for (int i = 0; i <= col; ++i)
