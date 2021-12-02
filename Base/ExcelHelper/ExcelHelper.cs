@@ -71,6 +71,11 @@ namespace Common
         /// <param name="Data"></param>
         public void Write(string filePath, string fileName, List<List<string>> Data)
         {
+            if(null == Data)
+            {
+                return;
+            }
+
             string fileFullPath = $"{filePath}\\{fileName}";
 
             using (var stream = File.Open(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
@@ -82,7 +87,7 @@ namespace Common
                     {
                         stringBuilder.Append(item).Append($",");
                     }
-                    stringBuilder.Append($"end\r\n");
+                    stringBuilder.Append($"\r\n");
 
                     byte[] byteArray = Encoding.Default.GetBytes(stringBuilder.ToString());
                     stream.Write(byteArray);

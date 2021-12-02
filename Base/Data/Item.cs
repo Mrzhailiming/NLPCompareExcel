@@ -20,4 +20,16 @@ namespace Base.Data
         /// </summary>
         public PairResult mRowUpdateFlags;
     }
+
+    /// <summary>
+    /// 对比结果(二维数组)的一个元素
+    /// </summary>
+    public class CompareResultItem
+    {
+        public Flags mFlag;
+
+        public string mSrcValue;
+
+        public string mTarValue;
+    }
 }

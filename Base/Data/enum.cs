@@ -68,7 +68,7 @@ namespace Base.Data
                     mTable.Add(Flags.Delete, "D");
                     mTable.Add(Flags.Insert, "I");
                     mTable.Add(Flags.Same, "S");
-                    mTable.Add(Flags.Gray, "G");
+                    mTable.Add(Flags.Gray, "D");
                 }
 
                 return mTable;

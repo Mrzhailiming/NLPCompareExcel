@@ -26,7 +26,14 @@ namespace Common
         /// 例目标数组[i, j]元素是增加 那么本二维数组[i,j]的元素即为"I:^.^:目标"
         /// 定义在 OperationDefaultString 类中
         /// </summary>
-        List<List<string>> mCompareResult = new List<List<string>>();
+        //List<List<string>> mCompareResult = new List<List<string>>();
+
+        /// <summary>
+        /// 存放两个二维数组的对比结果,
+        /// 元素为 CompareResultItem
+        /// 供调用者自己随便支配
+        /// </summary>
+        List<List<CompareResultItem>> mCompareCommonResult = new List<List<CompareResultItem>>();
 
         /// <summary>
         /// 保存二维数组的行数
@@ -45,7 +52,8 @@ namespace Common
         {
             mTable = null;
             mFlagsTable = null;
-            mCompareResult = new List<List<string>>();
+            //mCompareResult = new List<List<string>>();
+            mCompareCommonResult = new List<List<CompareResultItem>>();
             srcLen = -1;
             tarLen = -1;
         }
@@ -58,7 +66,8 @@ namespace Common
         /// <param name="compareFunc">二维数组元素是否相同的比较函数</param>
         /// <param name="minSimilarity">两个二维数组的每一行相似度大于多少才认为是相同的一行</param>
         public void Compare(List<List<string>> srcList, List<List<string>> tarList,
-            float minSimilarity, CompareFuncString compareFunc, out List<List<string>> compareResult)
+            float minSimilarity, CompareFuncString compareFunc, /*out List<List<string>> compareResult,*/
+            out List<List<CompareResultItem>> CompareCommonResult)
         {
             srcLen = srcList.Count;
             tarLen = tarList.Count;
@@ -161,7 +170,8 @@ namespace Common
             PrintDifferent(srcLen, tarLen);
 
             //给对比结果赋值
-            compareResult = mCompareResult;
+            //compareResult = mCompareResult;
+            CompareCommonResult = mCompareCommonResult;
         }
 
         /// <summary>
@@ -345,8 +355,11 @@ namespace Common
         {
             #region 写入mCompareResult
 
-            List<string> line = new List<string>();
-            mCompareResult.Add(line);
+            //List<string> line = new List<string>();
+            //mCompareResult.Add(line);
+
+            List<CompareResultItem> resultLine = new List<CompareResultItem>();
+            mCompareCommonResult.Add(resultLine);
 
             Result srcLineResult = pairLineResult.SrcResult;
             Result tarLineResult = pairLineResult.TarResult;
@@ -361,6 +374,8 @@ namespace Common
                 string tarItemString = OperationString.DELETE;
 
                 string operateStr = "operateStr not be change";
+
+                Flags flag = Flags.Gray;
 
                 if (srcIndex < srcLineResult.Count)//
                 {
@@ -381,22 +396,21 @@ namespace Common
                         tarItemString = tarLineResult[tarIndex].mValue.ToString();
                     }
 
-                    Flags flag = tarLineResult[tarIndex].mFlags;
+                    flag = tarLineResult[tarIndex].mFlags;
                     operateStr = Operation2StringTable.Table[flag];
                 }
 
-                string itemString = "";
-
-                if (tarLineResult[tarIndex].mFlags == Flags.Same)//相同,写一个就行了
-                {
-                    itemString = $"{srcItemString}";
-                }
-                else
-                {
-                    itemString = $"{operateStr}:{srcItemString}{OperationString.SEPARATOR}{tarItemString}";
-                }
-
-                line.Add(itemString);
+                //string itemString = "";
+                //if (tarLineResult[tarIndex].mFlags == Flags.Same)//相同,写一个就行了
+                //{
+                //    itemString = $"{srcItemString}";
+                //}
+                //else
+                //{
+                //    itemString = $"{operateStr}:{srcItemString}{OperationString.SEPARATOR}{tarItemString}";
+                //}
+                //line.Add(itemString);
+                resultLine.Add(new CompareResultItem() { mSrcValue = srcItemString, mTarValue = tarItemString, mFlag = flag });
 
                 // 放最后
                 ++tarIndex;
@@ -414,19 +428,24 @@ namespace Common
         {
             #region 写入mCompareResult
 
-            List<string> line;
+            //List<string> line;
+            List<CompareResultItem> resultLine;
 
             // 写源文件
-            if (mCompareResult.Count <= lineIndex)
+            //if (mCompareResult.Count <= lineIndex)
+            if (mCompareCommonResult.Count <= lineIndex)
             {
-                line = new List<string>();
-                mCompareResult.Add(line);
+                //line = new List<string>();
+                //mCompareResult.Add(line);
+                resultLine = new List<CompareResultItem>();
+                mCompareCommonResult.Add(resultLine);
 
                 if (lineItem.mFlags == Flags.Same)
                 {
                     foreach (string value in (List<string>)lineItem.mValue)
                     {
-                        line.Add(value);
+                        //line.Add(value);
+                        resultLine.Add(new CompareResultItem() { mSrcValue = value, mFlag = Flags.Same });
                     }
                 }
                 else if (lineItem.mFlags == Flags.Update) // 代表修改  (进入这个函数的,状态不会有update)
@@ -438,17 +457,19 @@ namespace Common
                 }
                 else if (lineItem.mFlags == Flags.Insert)// 源数组不会有这个标记
                 {
-                    
+
                 }
                 else if (lineItem.mFlags == Flags.Gray)//代表插入 src = "" tar = "abc"
                 {
-                    line.Add($"占位");//源二维数组是没有值的,也不知道这一行有多少元素,就不在这赋值了
+                    //line.Add($"占位");//源二维数组是没有值的,也不知道这一行有多少元素,就不在这赋值了
+                    resultLine.Add(new CompareResultItem() { mSrcValue = "占位" });
                 }
                 else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
                 {
                     foreach (string value in (List<string>)lineItem.mValue)
                     {
-                        line.Add($"D:{value}");
+                        //line.Add($"D:{value}");
+                        resultLine.Add(new CompareResultItem() { mSrcValue = value, mFlag = Flags.Delete });
                     }
                 }
             }
@@ -464,10 +485,12 @@ namespace Common
         {
             #region 写入mCompareResult
 
-            List<string> line;
+            //List<string> line;
+            List<CompareResultItem> resultLine;
 
             // 写目标文件
-            line = mCompareResult[lineIndex];
+            //line = mCompareResult[lineIndex];
+            resultLine = mCompareCommonResult[lineIndex];
 
             if (lineItem.mFlags == Flags.Same)//same 就只写源二维数组的值就行了,没必要写两组值
             {
@@ -483,19 +506,22 @@ namespace Common
             }
             else if (lineItem.mFlags == Flags.Insert)//插入 
             {
-                line.Clear();
+                //line.Clear();
                 foreach (string value in (List<string>)lineItem.mValue)
                 {
-                    line.Add($"I:{OperationString.INSERT}{OperationString.SEPARATOR}{value}");
+                    //line.Add($"I:{OperationString.INSERT}{OperationString.SEPARATOR}{value}");
+                    resultLine.Add(new CompareResultItem() { mSrcValue = OperationString.INSERT, mTarValue = value, mFlag = Flags.Delete });
                 }
             }
             else if (lineItem.mFlags == Flags.Gray)//代表目标文件的这个元素被删除 src = "abc" tar = ""
             {
                 //lineItem是没有值的, 所以只能遍历源文件里的值
                 //foreach (string value in line)//不能范围for, 因为要修改自己的值
-                for (int index = 0; index < line.Count; ++index)
+                //for (int index = 0; index < line.Count; ++index)
+                for (int index = 0; index < resultLine.Count; ++index)
                 {
-                    line[index] = $"{line[index]}{OperationString.SEPARATOR}{OperationString.DELETE}";
+                    //line[index] = $"{line[index]}{OperationString.SEPARATOR}{OperationString.DELETE}";
+                    resultLine[index].mTarValue = OperationString.DELETE;
                 }
             }
             else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
