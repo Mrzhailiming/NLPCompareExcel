@@ -15,20 +15,27 @@ namespace Common
             string tarFilePath = "src\\testTar.xlsx";
             string tarFileFullPath = $"{exePath}\\{tarFilePath}";
 
-            ExcelCompareParams excelCompareParams = new ExcelCompareParams();
-            excelCompareParams.MinSimilarity = 1.0f;
+            CompareParams compareParams = new CompareParams();
+            compareParams.MinSimilarity = 1.0f;
 
-            ExcelHelper.ReadExcel(srcFileFullPath, out excelCompareParams.SrcData);
-            ExcelHelper.ReadExcel(tarFileFullPath, out excelCompareParams.TarData);
+            ExcelHelper.ReadExcel(srcFileFullPath, out compareParams.SrcData);
+            ExcelHelper.ReadExcel(tarFileFullPath, out compareParams.TarData);
 
-            CommonCompare excelCompare = new CommonCompare();
-            excelCompare.Run(excelCompareParams);
+            CommonCompareHelper commonCompare = new CommonCompareHelper(compareParams);
+            commonCompare.Run(compareParams);
 
 
-            ExcelHelper.WriteCSV($"{exePath}\\src", "result", excelCompareParams.ResultData);
+            ExcelHelper.WriteCSV($"{exePath}\\src", "result", compareParams.ResultData);
         }
 
-        
+        static void TestCommonCompare()
+        {
+            //用这种方式完成上面函数的功能 testExcelHelper()
+            CompareParams compareParams = new CompareParams();
+            CommonCompareHelper excelCompare = new CommonCompareHelper(compareParams);
+            excelCompare.Run(compareParams);
+        }
+
         static void Main(string[] args)
         {
             //int[] src = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
