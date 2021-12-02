@@ -6,14 +6,18 @@ using System.Text;
 
 namespace Common
 {
-    public class ExcelHelper
+    /// <summary>
+    /// 读Excel
+    /// 写csv
+    /// </summary>
+    public class ExcelHelper : IFileHelper_Interface
     {
         /// <summary>
         /// 读取Excel文件, 二维list
         /// </summary>
         /// <param name="fileFullPath"></param>
         /// <param name="excelData"></param>
-        public static void ReadExcel(string fileFullPath, out List<List<string>> excelData)
+        public void Read(string fileFullPath, out List<List<string>> excelData)
         {
             excelData = new List<List<string>>();
 
@@ -65,9 +69,9 @@ namespace Common
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
         /// <param name="Data"></param>
-        public static void WriteCSV(string filePath, string fileName, List<List<string>> Data)
+        public void Write(string filePath, string fileName, List<List<string>> Data)
         {
-            string fileFullPath = $"{filePath}\\{fileName}.csv";
+            string fileFullPath = $"{filePath}\\{fileName}";
 
             using (var stream = File.Open(fileFullPath, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite))
             {
