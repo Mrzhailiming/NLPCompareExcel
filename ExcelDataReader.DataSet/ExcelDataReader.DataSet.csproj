@@ -5,10 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="ExcelDataReader - 复制.DataSet.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
   </ItemGroup>
 

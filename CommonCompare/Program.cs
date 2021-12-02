@@ -28,7 +28,7 @@ namespace Common
             ExcelCompareHelper.WriteCSV($"{exePath}\\src", "result", excelCompareParams.ResultData);
         }
 
-
+        
         static void Main(string[] args)
         {
             //int[] src = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -52,7 +52,7 @@ namespace Common
             //};
             //List<List<string>> tar = new List<List<string>>
             //{
-                
+
             //};
             //ExcelCompare compare = new ExcelCompare();
             //compare.MinSimilarity = 1.0f;

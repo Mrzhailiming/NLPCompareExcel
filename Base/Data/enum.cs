@@ -50,4 +50,30 @@ namespace Base.Data
         /// </summary>
         public static string SEPARATOR = $"|";
     }
+
+
+    public class Operation2StringTable
+    {
+
+        static Dictionary<Flags, string> mTable = null;
+        public static Dictionary<Flags, string> Table
+        {
+            get
+            {
+                // 初始化table
+                if(null == mTable)
+                {
+                    mTable = new Dictionary<Flags, string>();
+                    mTable.Add(Flags.Update, "U");
+                    mTable.Add(Flags.Delete, "D");
+                    mTable.Add(Flags.Insert, "I");
+                    mTable.Add(Flags.Same, "S");
+                    mTable.Add(Flags.Gray, "G");
+                }
+
+                return mTable;
+            }
+        }
+
+    }
 }

@@ -245,15 +245,23 @@ namespace Common
                 }
             }
 
+            //PrintDis(srcLen, tarLen, mTable);
+
             Result tarResult = mFlagsTable[srcLen, tarLen].TarResult;
             float curSimilarity = Similarity(tarResult);
             bool isSame = curSimilarity >= minSimilarity;
 
-            //两组元素相似且不完全相同时才给updateFlagsResult赋值
-            if (isSame && 1.0 > curSimilarity)
+            // 1.两组元素相似且不完全相同时给updateFlagsResult赋值
+            if (isSame && minSimilarity > curSimilarity)
             {
                 updateFlagsResult = mFlagsTable[srcLen, tarLen];
             }
+            // 2.两组元素不同
+            else if (!isSame)
+            {
+                updateFlagsResult = mFlagsTable[srcLen, tarLen];
+            }
+
 
             //返回这两行是否相同 相似度>=预定相似度
             return isSame;
@@ -291,21 +299,116 @@ namespace Common
 
                 //mRowUpdateFlags不为空, 两组元素就有差异
                 PairResult tmpLineResult = result[srcIndex].mRowUpdateFlags;
-                if (null != tmpLineResult)//这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
-                {
-                    PrintLineDiff(tmpLineResult, srcIndex, isSrcFile);
-                }
 
-                Write(result[srcIndex], srcIndex, isSrcFile);
+                // 源
+                if (isSrcFile)
+                {
+                    //这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
+                    if (null != tmpLineResult)
+                    {
+                        PrintLineDiff(tmpLineResult, srcIndex, isSrcFile);
+
+                        ////源二维数组的时候往mResult写全了就 . 因为tmpLineResult包含源和目标的值
+                        WriteLineUpdate(tmpLineResult, srcIndex, isSrcFile);
+                    }
+                    //负责写Insert和Delete 还有same(完全相同) gray
+                    else
+                    {
+                        WriteSrcLine(result[srcIndex], srcIndex, isSrcFile);
+                    }
+                }
+                // 目标
+                else
+                {
+                    //这个判断, 只有不完全相同的两行才会输出 update 或者 same(不完全相同的情况)
+                    if (null != tmpLineResult)
+                    {
+                        PrintLineDiff(tmpLineResult, srcIndex, isSrcFile);
+                    }
+                    //负责写Insert和Delete 还有same(完全相同) gray
+                    else
+                    {
+                        WriteTarLine(result[srcIndex], srcIndex, isSrcFile);
+                    }
+                }
             }
         }
 
         /// <summary>
-        /// 写入mResult
+        /// 一次将源和目标数组写入mResult
+        /// 输出 update 或者 same(不完全相同的情况)
         /// </summary>
-        public void Write(Item lineItem, int lineIndex, bool isSrcFile)
+        public void WriteLineUpdate(PairResult pairLineResult, int lineIndex, bool isSrcFile)
         {
-            #region 写入mResult
+            #region 写入mCompareResult
+
+            List<string> line = new List<string>();
+            mCompareResult.Add(line);
+
+            Result srcLineResult = pairLineResult.SrcResult;
+            Result tarLineResult = pairLineResult.TarResult;
+
+            //srcLineResult tarLineResult所含元素个数可能不相等,(插入,删除)
+            int srcIndex = 0;
+            int tarIndex = 0;
+
+            while (srcIndex < srcLineResult.Count || tarIndex < tarLineResult.Count)
+            {
+                string srcItemString = OperationString.INSERT;
+                string tarItemString = OperationString.DELETE;
+
+                string operateStr = "operateStr not be change";
+
+                if (srcIndex < srcLineResult.Count)//
+                {
+
+                    if (null != srcLineResult[srcIndex].mValue)
+                    {
+                        srcItemString = srcLineResult[srcIndex].mValue.ToString();
+                    }
+
+                    operateStr = Operation2StringTable.Table[Flags.Delete];
+
+                }
+
+                if (tarIndex < tarLineResult.Count)//
+                {
+                    if (null != tarLineResult[tarIndex].mValue)
+                    {
+                        tarItemString = tarLineResult[tarIndex].mValue.ToString();
+                    }
+
+                    Flags flag = tarLineResult[tarIndex].mFlags;
+                    operateStr = Operation2StringTable.Table[flag];
+                }
+
+                string itemString = "";
+
+                if (tarLineResult[tarIndex].mFlags == Flags.Same)//相同,写一个就行了
+                {
+                    itemString = $"{srcItemString}";
+                }
+                else
+                {
+                    itemString = $"{operateStr}:{srcItemString}{OperationString.SEPARATOR}{tarItemString}";
+                }
+
+                line.Add(itemString);
+
+                // 放最后
+                ++tarIndex;
+                ++srcIndex;
+            }
+
+            #endregion 写入mCompareResult
+        }
+        /// <summary>
+        /// 将源二维数组的状态写入mResult
+        /// 写Insert和Delete 还有same(完全相同) gray
+        /// </summary>
+        public void WriteSrcLine(Item lineItem, int lineIndex, bool isSrcFile)
+        {
+            #region 写入mCompareResult
 
             List<string> line;
 
@@ -315,85 +418,88 @@ namespace Common
                 line = new List<string>();
                 mCompareResult.Add(line);
 
-                
+                if (lineItem.mFlags == Flags.Same)
                 {
-                    if (lineItem.mFlags == Flags.Same)
+                    foreach (string value in (List<string>)lineItem.mValue)
                     {
-                        foreach (string value in (List<string>)lineItem.mValue)
-                        {
-                            line.Add(value);
-                        }
-                    }
-                    else if (lineItem.mFlags == Flags.Update) // 代表修改
-                    {
-                        foreach (string value in (List<string>)lineItem.mValue)
-                        {
-                            line.Add($"U:{value}");
-                        }
-                    }
-                    else if (lineItem.mFlags == Flags.Insert)
-                    {
-                        //源数组不会有这个标记
-                    }
-                    else if (lineItem.mFlags == Flags.Gray)//代表插入 src = "" tar = "abc"
-                    {
-                        line.Add($"占位");
-                        //line.Add($"I:{OperationString.INSERT}");//源二维数组是没有值,也不知道这一行有多少元素,就不在这赋值了
-                    }
-                    else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
-                    {
-                        foreach (string value in (List<string>)lineItem.mValue)
-                        {
-                            line.Add($"D:{value}");
-                        }
+                        line.Add(value);
                     }
                 }
-            }
-            // 写目标文件
-            else
-            {
-                line = mCompareResult[lineIndex];
-                int itemIndex = -1;
-
-                
-                if (lineItem.mFlags == Flags.Same)//same 就只写源二维数组的值就行了
+                else if (lineItem.mFlags == Flags.Update) // 代表修改  (进入这个函数的,状态不会有update)
                 {
                     //foreach (string value in (List<string>)lineItem.mValue)
                     //{
-                    //    line[++itemIndex] = $"{line[itemIndex]}:{value}";
+                    //    line.Add($"U:{value}");
                     //}
                 }
-                else if (lineItem.mFlags == Flags.Update) // 代表修改
+                else if (lineItem.mFlags == Flags.Insert)// 源数组不会有这个标记
                 {
-                    foreach (string value in (List<string>)lineItem.mValue)
-                    {
-                        line[++itemIndex] = $"{line[itemIndex]}{OperationString.SEPARATOR}{value}";
-                    }
+                    
                 }
-                else if (lineItem.mFlags == Flags.Insert)//插入 
+                else if (lineItem.mFlags == Flags.Gray)//代表插入 src = "" tar = "abc"
                 {
-                    line.Clear();
-                    foreach (string value in (List<string>)lineItem.mValue)
-                    {
-                        line.Add($"I:{OperationString.INSERT}{OperationString.SEPARATOR}{value}");
-                    }
-                }
-                else if (lineItem.mFlags == Flags.Gray)//代表目标文件的这个元素被删除 src = "abc" tar = ""
-                {
-                    //lineItem是没有值的, 所以只能遍历源文件里的值
-                    //foreach (string value in line)//不能范围for, 因为要修改自己的值
-                    for(int index = 0; index < line.Count; ++index)
-                    {
-                        line[index] = $"{line[index]}{OperationString.SEPARATOR}{OperationString.DELETE}";
-                    }
+                    line.Add($"占位");//源二维数组是没有值的,也不知道这一行有多少元素,就不在这赋值了
                 }
                 else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
                 {
-                    //源数组不会有这个标记
+                    foreach (string value in (List<string>)lineItem.mValue)
+                    {
+                        line.Add($"D:{value}");
+                    }
                 }
             }
 
-            #endregion 写入mResult
+            #endregion 写入mCompareResult
+        }
+
+        /// <summary>
+        /// 将目标二维数组的状态写入mResult
+        /// 写Insert和Delete 还有same(完全相同) gray
+        /// </summary>
+        public void WriteTarLine(Item lineItem, int lineIndex, bool isSrcFile)
+        {
+            #region 写入mCompareResult
+
+            List<string> line;
+
+            // 写目标文件
+            line = mCompareResult[lineIndex];
+
+            if (lineItem.mFlags == Flags.Same)//same 就只写源二维数组的值就行了,没必要写两组值
+            {
+
+            }
+            else if (lineItem.mFlags == Flags.Update) // 代表修改 (进入这个函数的,状态不会有update)
+            {
+                ////两边元素个数可能不一致 
+                //foreach (string value in (List<string>)lineItem.mValue)
+                //{
+                //    line[++itemIndex] = $"{line[itemIndex]}{OperationString.SEPARATOR}{value}";
+                //}
+            }
+            else if (lineItem.mFlags == Flags.Insert)//插入 
+            {
+                line.Clear();
+                foreach (string value in (List<string>)lineItem.mValue)
+                {
+                    line.Add($"I:{OperationString.INSERT}{OperationString.SEPARATOR}{value}");
+                }
+            }
+            else if (lineItem.mFlags == Flags.Gray)//代表目标文件的这个元素被删除 src = "abc" tar = ""
+            {
+                //lineItem是没有值的, 所以只能遍历源文件里的值
+                //foreach (string value in line)//不能范围for, 因为要修改自己的值
+                for (int index = 0; index < line.Count; ++index)
+                {
+                    line[index] = $"{line[index]}{OperationString.SEPARATOR}{OperationString.DELETE}";
+                }
+            }
+            else if (lineItem.mFlags == Flags.Delete)//代表删除 src = "abc" tar = ""
+            {
+                //目标数组不会有这个标记
+            }
+
+            #endregion 写入mCompareResult
         }
 
         /// <summary>
@@ -442,7 +548,7 @@ namespace Common
         /// <summary>
         /// 输出编辑距离table
         /// </summary>
-        void PrintDis(int srcLen, int tarLen)
+        void PrintDis(int srcLen, int tarLen, int[,] mTable)
         {
             for (int i = 0; i <= srcLen; ++i)
             {
@@ -477,7 +583,7 @@ namespace Common
         /// <summary>
         /// 初始化二维flagstable
         /// </summary>
-        void InitTwoDimensionFlagsTable(List<List<string>> src, List<List<string>> tar, PairResult[,] flagsTable, int col, int row)
+        private void InitTwoDimensionFlagsTable(List<List<string>> src, List<List<string>> tar, PairResult[,] flagsTable, int col, int row)
         {
             //注:第一列和第一行需要给一个初始状态
 
@@ -526,12 +632,7 @@ namespace Common
         /// <summary>
         /// 初始化一维FlagsTable
         /// </summary>
-        /// <param name="src"></param>
-        /// <param name="tar"></param>
-        /// <param name="flagsTable"></param>
-        /// <param name="col"></param>
-        /// <param name="row"></param>
-        void InitOneDimensionFlagsTable(List<string> src, List<string> tar, PairResult[,] flagsTable, int col, int row)
+        private void InitOneDimensionFlagsTable(List<string> src, List<string> tar, PairResult[,] flagsTable, int col, int row)
         {
             //注:第一列和第一行需要给一个初始状态
 
@@ -552,23 +653,29 @@ namespace Common
             //第一列, 走删除的逻辑 src = "abc" -> tar = ""
             for (int colIndex = 1; colIndex <= col; ++colIndex)
             {
-                PairResult colPairResult = flagsTable[colIndex, 0];
+                PairResult colPairResult = new PairResult(flagsTable[colIndex - 1, 0]);
                 int srcValueIndex = colIndex - 1;
+
                 //源二维数组这个值标记为被删除
                 colPairResult.SrcResult.Add(new Item() { mFlags = Flags.Delete, mValue = src[srcValueIndex] });
                 //目标二维数组加空值
                 colPairResult.TarResult.Add(new Item() { mFlags = Flags.Gray });
+
+                flagsTable[colIndex, 0] = colPairResult;
             }
 
             //第一行, 走插入的逻辑 src = ""  -> tar = "abc"
             for (int rowIndex = 1; rowIndex <= row; ++rowIndex)
             {
-                PairResult rowPairResult = flagsTable[0, rowIndex];
+                PairResult rowPairResult = new PairResult(flagsTable[0, rowIndex - 1]);
                 int tarValueIndex = rowIndex - 1;
+
                 //源二维数组加空值
                 rowPairResult.SrcResult.Add(new Item() { mFlags = Flags.Gray });
                 //目标二维数组标记为插入
                 rowPairResult.TarResult.Add(new Item() { mFlags = Flags.Insert, mValue = tar[tarValueIndex] });
+
+                flagsTable[0, rowIndex] = rowPairResult;
             }
         }
     }
