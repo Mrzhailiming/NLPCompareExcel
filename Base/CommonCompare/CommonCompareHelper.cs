@@ -12,12 +12,12 @@ namespace Common
     public class CommonCompareHelper
     {
         /// <summary>
-        /// 元素类型是int
+        /// 判断两个int是否相等
         /// </summary>
         //static CompareFuncInt mCompareFuncInt = new CompareFuncInt(CompareFuncInt);
 
         /// <summary>
-        /// 元素类型是string
+        /// 判断两个字符串是否相等
         /// </summary>
         static CompareFuncString mCompareFuncString = new CompareFuncString(CompareFuncString);
 
@@ -47,6 +47,12 @@ namespace Common
             return src == tar;
         }
 
+        /// <summary>
+        /// 判断两个字符串是否相等
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="tar"></param>
+        /// <returns></returns>
         public static bool CompareFuncString(string src, string tar)
         {
             return src == tar;

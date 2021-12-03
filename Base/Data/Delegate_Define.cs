@@ -5,7 +5,14 @@ using System.Text;
 
 namespace Base.DelegateDefine
 {
+    /// <summary>
+    /// 判断两个int是否相等
+    /// </summary>
     public delegate bool CompareFuncInt(int src, int tar);
+
+    /// <summary>
+    /// 判断两个字符串是否相等
+    /// </summary>
     public delegate bool CompareFuncString(String src, String tar);
 
     /// <summary>
