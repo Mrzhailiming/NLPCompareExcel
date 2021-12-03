@@ -26,9 +26,23 @@ namespace Base.Data
     /// </summary>
     public class CompareResultItem
     {
-        public Flags mFlag;
+        /// <summary>
+        /// mSrcFlag = gary 对应 mTarFlag = insert
+        /// mSrcFlag = delete 对应 mTarFlag = gray
+        /// mSrcFlag = same 对应 mTarFlag = same
+        /// mSrcFlag = update 对应 mTarFlag = update
+        /// </summary>
+        public Flags mSrcFlag;
 
         public string mSrcValue;
+
+        /// <summary>
+        /// mSrcFlag = gary 对应 mTarFlag = insert
+        /// mSrcFlag = delete 对应 mTarFlag = gray
+        /// mSrcFlag = same 对应 mTarFlag = same
+        /// mSrcFlag = update 对应 mTarFlag = update
+        /// </summary>
+        public Flags mTarFlag;
 
         public string mTarValue;
     }

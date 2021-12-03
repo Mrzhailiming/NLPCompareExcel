@@ -42,6 +42,10 @@ namespace Base.Data
         /// </summary>
         public static string INSERT = $"_";
         /// <summary>
+        /// GRAY
+        /// </summary>
+        public static string GRAY = $"_";
+        /// <summary>
         /// 删除
         /// </summary>
         public static string DELETE = $"_";

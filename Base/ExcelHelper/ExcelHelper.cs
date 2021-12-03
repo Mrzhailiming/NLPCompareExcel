@@ -130,7 +130,7 @@ namespace Common
         /// 把List<List<CompareResultItem>> 转为 <List<string>>
         /// </summary>
         /// <param name="CompareCommonResult"></param>
-        /// <returns></returns>
+        /// <returns>最终输出到文件的内容</returns>
         public List<List<string>> CompareResultItem2string(List<List<CompareResultItem>> CompareCommonResult)
         {
             List<List<string>> data = new List<List<string>>();
@@ -141,25 +141,25 @@ namespace Common
                 data.Add(lineData = new List<string>());
                 foreach (CompareResultItem item in line)
                 {
-                    if (item.mFlag == Flags.Same)
+                    if (item.mTarFlag == Flags.Same)
                     {
-                        lineData.Add($"{item.mSrcValue}");
+                        lineData.Add($"{item.mTarValue}");
                     }
-                    else if (item.mFlag == Flags.Update)
+                    else if (item.mTarFlag == Flags.Update)
                     {
-                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{item.mTarValue}");
+                        lineData.Add($"{Operation2StringTable.Table[item.mTarFlag]}:{item.mSrcValue}|{item.mTarValue}");
                     }
-                    else if (item.mFlag == Flags.Delete)
+                    else if (item.mTarFlag == Flags.Delete)//目标文件的flag不会有Delete
                     {
-                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
+                        lineData.Add($"{Operation2StringTable.Table[item.mTarFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
                     }
-                    else if (item.mFlag == Flags.Gray)
+                    else if (item.mTarFlag == Flags.Gray)
                     {
-                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
+                        lineData.Add($"{Operation2StringTable.Table[item.mTarFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
                     }
-                    else if (item.mFlag == Flags.Insert)
+                    else if (item.mTarFlag == Flags.Insert)
                     {
-                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{OperationString.INSERT}|{item.mTarValue}");
+                        lineData.Add($"{Operation2StringTable.Table[item.mTarFlag]}:{OperationString.INSERT}|{item.mTarValue}");
                     }
                 }
             }

@@ -20,3 +20,8 @@ CompareParams compareParams = new CompareParams()
 CommonCompareHelper excelCompare = new CommonCompareHelper(compareParams);
 excelCompare.Run();
 ```
+### 注
+1. 对比结果
+	+ 源文件的标记只有: same gray delete
+	+ 目标文件的标记只有: same gray insert
+2. 所以在处理对比结果的时候要注意第1点

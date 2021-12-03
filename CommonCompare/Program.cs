@@ -19,11 +19,11 @@ namespace Common
             CompareParams compareParams = new CompareParams()
             {
                 //五个必须赋值的成员
-                SrcFileFullPath = srcFileFullPath,
-                TarFileFullPath = tarFileFullPath,
-                OutPath = $"{exePath}\\src",
-                OutFileName = "out.csv",
-                FileHelper = new ExcelHelper(),
+                SrcFileFullPath = srcFileFullPath,  //源文件的完整路径
+                TarFileFullPath = tarFileFullPath,  //目标文件的完整路径
+                OutPath = $"{exePath}\\src",    //输出结果文件的目录
+                OutFileName = "out.csv",        //文件名
+                FileHelper = new ExcelHelper(), //自定制读取和写入文件 (继承IFileHelper_Interface, 实现读写文件)
             };
 
             CommonCompareHelper excelCompare = new CommonCompareHelper(compareParams);
