@@ -1,7 +1,9 @@
 ﻿using Base;
 using Base.Data;
 using ExcelDataReader;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Text;
 
@@ -45,8 +47,31 @@ namespace Common
 
                             ++lineIndex;
                         }
-                    } while (reader.NextResult());//调到下一个sheet
+                    } while (false);//目前只读一个sheet
+                    //} while (reader.NextResult());//调到下一个sheet
 
+
+                    ////dataset
+                    //var dataSet = reader.AsDataSet();
+
+                    //int sheetIndex = -1;
+                    //foreach (DataTable dt in dataSet.Tables)
+                    //{
+                    //    int rowIndex = -1;
+                    //    //dt.Rows[rowIndex][colIndex] = newValue;
+                    //    foreach (DataRow dr in dt.Rows)
+                    //    {
+                    //        int itemIndex = -1;
+                    //        StringBuilder stringBuilder = new StringBuilder();
+                    //        foreach (DataColumn dc in dr.Table.Columns) 
+                    //        {
+                    //            stringBuilder.Append($"{dr[dc]}\t");
+                    //        }
+                    //        Console.WriteLine($"{stringBuilder}end");
+                    //    }
+                    //}
+
+                        
                 }
             }
 
