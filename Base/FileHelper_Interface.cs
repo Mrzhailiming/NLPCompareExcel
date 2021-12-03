@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Base.Data;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -23,6 +24,6 @@ namespace Base
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
         /// <param name="Data"></param>
-        void Write(string filePath, string fileName, List<List<string>> Data);
+        void Write(string filePath, string fileName, List<List<CompareResultItem>> Data);
     }
 }

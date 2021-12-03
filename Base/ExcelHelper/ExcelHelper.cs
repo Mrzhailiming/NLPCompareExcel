@@ -1,4 +1,5 @@
 ﻿using Base;
+using Base.Data;
 using ExcelDataReader;
 using System.Collections.Generic;
 using System.IO;
@@ -69,12 +70,15 @@ namespace Common
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
         /// <param name="Data"></param>
-        public void Write(string filePath, string fileName, List<List<string>> Data)
+        public void Write(string filePath, string fileName, List<List<CompareResultItem>> CompareResultItems)
         {
-            if(null == Data)
+            if(null == CompareResultItems)
             {
                 return;
             }
+
+            List<List<string>> Data = CompareResultItem2string(CompareResultItems);
+
 
             string fileFullPath = $"{filePath}\\{fileName}";
 
@@ -94,6 +98,48 @@ namespace Common
                     stream.Flush();
                 }
             }
+        }
+
+        /// <summary>
+        /// 输出string的组织方式自己确定
+        /// 把List<List<CompareResultItem>> 转为 <List<string>>
+        /// </summary>
+        /// <param name="CompareCommonResult"></param>
+        /// <returns></returns>
+        public List<List<string>> CompareResultItem2string(List<List<CompareResultItem>> CompareCommonResult)
+        {
+            List<List<string>> data = new List<List<string>>();
+
+            foreach (List<CompareResultItem> line in CompareCommonResult)
+            {
+                List<string> lineData;
+                data.Add(lineData = new List<string>());
+                foreach (CompareResultItem item in line)
+                {
+                    if (item.mFlag == Flags.Same)
+                    {
+                        lineData.Add($"{item.mSrcValue}");
+                    }
+                    else if (item.mFlag == Flags.Update)
+                    {
+                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{item.mTarValue}");
+                    }
+                    else if (item.mFlag == Flags.Delete)
+                    {
+                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
+                    }
+                    else if (item.mFlag == Flags.Gray)
+                    {
+                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{item.mSrcValue}|{OperationString.DELETE}");
+                    }
+                    else if (item.mFlag == Flags.Insert)
+                    {
+                        lineData.Add($"{Operation2StringTable.Table[item.mFlag]}:{OperationString.INSERT}|{item.mTarValue}");
+                    }
+                }
+            }
+
+            return data;
         }
     }
 }
