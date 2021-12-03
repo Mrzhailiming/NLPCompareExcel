@@ -26,8 +26,13 @@ namespace Common
                 FileHelper = new ExcelHelper(), //自定制读取和写入文件 (继承IFileHelper_Interface, 实现读写文件)
             };
 
-            CommonCompareHelper excelCompare = new CommonCompareHelper(compareParams);
-            excelCompare.Run();
+            CommonCompareHelper commonCompareHelper = new CommonCompareHelper();
+            commonCompareHelper.Run(compareParams);
+
+            //// change compareParams
+            //commonCompareHelper.Run(compareParams);
+            //// change compareParams
+            //commonCompareHelper.Run(compareParams);
         }
 
         static void Main(string[] args)

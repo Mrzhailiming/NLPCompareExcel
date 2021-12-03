@@ -45,14 +45,12 @@ namespace Common
         int tarLen = -1;
 
         /// <summary>
-        /// !!!!!!!!!对比完一次就手动重置!!!!!!!!!!
-        ///  todo : reset之前吧自己想要的信息导出来
+        /// 重置
         /// </summary>
-        public void Reset()
+        private void Reset()
         {
             mTable = null;
             mFlagsTable = null;
-            //mCompareResult = new List<List<string>>();
             mCompareCommonResult = new List<List<CompareResultItem>>();
             srcLen = -1;
             tarLen = -1;
@@ -172,6 +170,9 @@ namespace Common
             //给对比结果赋值
             //compareResult = mCompareResult;
             CompareCommonResult = mCompareCommonResult;
+
+            //清理
+            Reset();
         }
 
         /// <summary>

@@ -15,7 +15,7 @@ namespace Base
         /// 读取文件到二维list
         /// </summary>
         /// <param name="fileFullPath"></param>
-        /// <param name="excelData"></param>
+        /// <param name="excelData">存储文件的内容</param>
         void Read(string fileFullPath, out List<List<string>> excelData);
 
         /// <summary>
@@ -23,7 +23,7 @@ namespace Base
         /// </summary>
         /// <param name="filePath"></param>
         /// <param name="fileName"></param>
-        /// <param name="Data"></param>
+        /// <param name="Data">对比结果,自定制输出格式</param>
         void Write(string filePath, string fileName, List<List<CompareResultItem>> Data);
     }
 }

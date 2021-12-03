@@ -58,7 +58,17 @@ namespace Base.Data
         /// </summary>
         public string OutFileName{ get; set; } = "";
 
-        public bool Check()
+
+        public bool CanUse
+        {
+            get
+            {
+                return Check();
+            }
+            private set { }
+        }
+
+        private bool Check()
         {
 
             bool ret = true;

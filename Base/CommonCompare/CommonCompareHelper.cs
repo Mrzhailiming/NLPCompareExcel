@@ -21,44 +21,24 @@ namespace Common
         /// </summary>
         static CompareFuncString mCompareFuncString = new CompareFuncString(CompareFuncString);
 
-        private CompareParams mCompareParams = null;
+        private NLPCompare mNLPCompare = new NLPCompare();
 
-        CommonCompareHelper() { }
-
-        public CommonCompareHelper(CompareParams compareParams)
+        public void Run(CompareParams compareParams)
         {
-            mCompareParams = compareParams;
-        }
-
-        private void Init()
-        {
-            if (!mCompareParams.Check())
-            {
-
-            }
-        }
-
-        public void Run()
-        {
-            if (!mCompareParams.Check())
+            if (!compareParams.CanUse)
             {
                 //参数check错误
                 Console.WriteLine("mCompareParams 检查错误");
                 return;
             }
 
-            NLPCompare tmpNLPCompare = new NLPCompare();
+            compareParams.FileHelper.Read(compareParams.SrcFileFullPath, out compareParams.SrcData);
+            compareParams.FileHelper.Read(compareParams.TarFileFullPath, out compareParams.TarData);
 
-            mCompareParams.FileHelper.Read(mCompareParams.SrcFileFullPath, out mCompareParams.SrcData);
-            mCompareParams.FileHelper.Read(mCompareParams.TarFileFullPath, out mCompareParams.TarData);
+            mNLPCompare.Compare(compareParams.SrcData, compareParams.TarData, compareParams.MinSimilarity,
+                mCompareFuncString,/* out mCompareParams.ResultData,*/ out compareParams.CompareCommonResult);
 
-            tmpNLPCompare.Compare(mCompareParams.SrcData, mCompareParams.TarData, mCompareParams.MinSimilarity,
-                mCompareFuncString,/* out mCompareParams.ResultData,*/ out mCompareParams.CompareCommonResult);
-
-            mCompareParams.FileHelper.Write(mCompareParams.OutPath, mCompareParams.OutFileName, mCompareParams.CompareCommonResult);
-
-            //如果重复使用这个对象的Compare(),就得用完之后调用Reset()
-            tmpNLPCompare.Reset();
+            compareParams.FileHelper.Write(compareParams.OutPath, compareParams.OutFileName, compareParams.CompareCommonResult);
         }
 
 
