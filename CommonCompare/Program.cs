@@ -56,7 +56,7 @@ namespace Common
 
             while (true)
             {
-                Console.WriteLine("输入两个Excel的路径,按回车开始对比");
+                Console.WriteLine("输入两个Excel的路径,空格分开,然后按回车开始对比");
 
                 TestCommonCompare();
             }

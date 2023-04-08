@@ -79,10 +79,11 @@ namespace Base.Data
                 ret = false;
             }
 
-            if (!Directory.Exists(OutPath))
+            if (Directory.Exists(OutPath))
             {
-                Console.WriteLine($"OutPath not exist:{OutPath}");
-                ret = false;
+                Directory.CreateDirectory(OutPath);
+                //Console.WriteLine($"OutPath not exist:{OutPath}");
+                //ret = false;
             }
 
             if (!File.Exists(SrcFileFullPath))
