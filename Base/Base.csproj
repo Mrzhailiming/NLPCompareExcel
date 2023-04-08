@@ -5,8 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ExcelDataReader.DataSet\ExcelDataReader.DataSet.csproj" />
-    <ProjectReference Include="..\ExcelDataReader\ExcelDataReader.csproj" />
+    <Reference Include="ExcelDataReader">
+      <HintPath>..\dlls\ExcelDataReader.dll</HintPath>
+    </Reference>
+    <Reference Include="ExcelDataReader.DataSet">
+      <HintPath>..\dlls\ExcelDataReader.DataSet.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
