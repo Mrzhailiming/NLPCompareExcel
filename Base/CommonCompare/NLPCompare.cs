@@ -286,13 +286,13 @@ namespace Common
             Result srcResult = mFlagsTable[srcLen, tarLen].SrcResult;
             Result tarResult = mFlagsTable[srcLen, tarLen].TarResult;
 
-            Console.WriteLine("--srcFile result begin--");
+            //Console.WriteLine("--srcFile result begin--");
             PrintOneFile(srcResult, true);
-            Console.WriteLine("--srcFile result end--\r\n");
+            //Console.WriteLine("--srcFile result end--\r\n");
 
-            Console.WriteLine("--tarFile result begin--");
+            //Console.WriteLine("--tarFile result begin--");
             PrintOneFile(tarResult, false);
-            Console.WriteLine("--tarFile result end--");
+            //Console.WriteLine("--tarFile result end--");
 
         }
 
@@ -308,7 +308,7 @@ namespace Common
             {
                 //控制台输出
                 string messageStr = $"line:{srcIndex} value:{result[srcIndex].mValue} flag:{result[srcIndex].mFlags}";
-                Console.WriteLine(messageStr);
+                //Console.WriteLine(messageStr);
 
                 //mRowUpdateFlags不为空, 两组元素就有差异 就会为mRowUpdateFlags赋值
                 PairResult tmpLineResult = result[srcIndex].mRowUpdateFlags;
@@ -510,14 +510,14 @@ namespace Common
 
             #region 控制台输出
 
-            Console.WriteLine($"----line{lineIndex}-where-update begin----");
+            //Console.WriteLine($"----line{lineIndex}-where-update begin----");
             int i = -1;
             foreach (Item item in result)
             {
                 string updateStr = $"row:{++i} value:{item.mValue} flag:{item.mFlags}";
-                Console.WriteLine(updateStr);
+                //Console.WriteLine(updateStr);
             }
-            Console.WriteLine($"----line{lineIndex}-where-update end----");
+            //Console.WriteLine($"----line{lineIndex}-where-update end----");
 
             #endregion 控制台输出
         }

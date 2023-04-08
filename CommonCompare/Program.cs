@@ -7,13 +7,27 @@ namespace Common
     {
         static void TestCommonCompare()
         {
+            string line = Console.ReadLine();
+
+            if (string.IsNullOrEmpty(line))
+            {
+                return;
+            }
+
+            var arr = line.Split(' ');
+
+            if (arr is null || arr.Length < 2)
+            {
+                return;
+            }
+
             string exePath = System.IO.Directory.GetCurrentDirectory();
 
-            string srcFilePath = "src\\testSrc.xlsx";
-            string srcFileFullPath = $"{exePath}\\{srcFilePath}";
+            string srcFilePath = arr[0];
+            string srcFileFullPath = $"{srcFilePath}";
 
-            string tarFilePath = "src\\testTar.xlsx";
-            string tarFileFullPath = $"{exePath}\\{tarFilePath}";
+            string tarFilePath = arr[1];
+            string tarFileFullPath = $"{tarFilePath}";
 
             //用这种方式
             CompareParams compareParams = new CompareParams()
@@ -33,11 +47,19 @@ namespace Common
             //commonCompareHelper.Run(compareParams);
             //// change compareParams
             //commonCompareHelper.Run(compareParams);
+
+            Console.WriteLine($"处理结束,输出文件为:{compareParams.OutPath}\\{compareParams.OutFileName}");
         }
 
         static void Main(string[] args)
         {
-            TestCommonCompare();
+
+            while (true)
+            {
+                Console.WriteLine("输入两个Excel的路径,按回车开始对比");
+
+                TestCommonCompare();
+            }
 
             Console.WriteLine("key to quit");
             Console.ReadKey();
